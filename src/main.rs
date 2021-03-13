@@ -92,48 +92,6 @@ fn run() -> windows::Result<()> {
     }
 
     windows::ErrorCode::from_win32(message.w_param.0 as u32).ok()
-
-    /*
-    event_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::Wait;
-        match event {
-            Event::WindowEvent {
-                event: WindowEvent::CloseRequested,
-                window_id,
-            } if window_id == window.id() => *control_flow = ControlFlow::Exit,
-            Event::WindowEvent {
-                event: WindowEvent::Resized(size),
-                ..
-            } => {
-                let size = Vector2 {
-                    x: size.width as f32,
-                    y: size.height as f32,
-                };
-                game.on_parent_size_changed(&size).unwrap();
-            }
-            Event::WindowEvent {
-                event: WindowEvent::CursorMoved { position, .. },
-                ..
-            } => {
-                let point = Vector2 {
-                    x: position.x as f32,
-                    y: position.y as f32,
-                };
-                game.on_pointer_moved(&point).unwrap();
-            }
-            Event::WindowEvent {
-                event: WindowEvent::MouseInput { state, button, .. },
-                ..
-            } => {
-                if state == ElementState::Pressed {
-                    game.on_pointer_pressed(button == MouseButton::Right, false)
-                        .unwrap();
-                }
-            }
-            _ => (),
-        }
-    });
-    */
 }
 
 fn main() {
