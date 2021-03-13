@@ -18,7 +18,7 @@ use bindings::windows::win32::windows_and_messaging::{GetClientRect, CREATESTRUC
 use bindings::windows::win32::winrt::ICompositorDesktopInterop;
 use windows::Interface;
 
-use crate::check::{CheckBool, CheckHandle};
+use crate::check::CheckHandle;
 use crate::wide_string::ToWide;
 
 static REGISTER_WINDOW_CLASS: Once = Once::new();
@@ -139,7 +139,7 @@ impl<F: FnMut(HWND, u32, WPARAM, LPARAM) -> LRESULT> Window<F> {
 pub fn get_window_size(window_handle: HWND) -> windows::Result<SizeInt32> {
     unsafe {
         let mut rect = RECT::default();
-        let _ = GetClientRect(window_handle, &mut rect).check_bool()?;
+        let _ = GetClientRect(window_handle, &mut rect).ok()?;
         let width = rect.right - rect.left;
         let height = rect.bottom - rect.top;
         Ok(SizeInt32 { width, height })
