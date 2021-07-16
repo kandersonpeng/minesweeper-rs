@@ -1,21 +1,15 @@
 use std::sync::Once;
 
-use bindings::windows::graphics::SizeInt32;
-use bindings::windows::ui::composition::{desktop::DesktopWindowTarget, Compositor};
-use bindings::windows::win32::display_devices::RECT;
-use bindings::windows::win32::menus_and_resources::{LoadCursorW, HMENU};
-use bindings::windows::win32::system_services::GWLP_USERDATA;
-use bindings::windows::win32::system_services::WM_NCCREATE;
-use bindings::windows::win32::system_services::{
-    GetModuleHandleW, CW_USEDEFAULT, HINSTANCE, IDC_ARROW, LRESULT, PWSTR,
+use bindings::Windows::Graphics::SizeInt32;
+use bindings::Windows::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, PWSTR, RECT, WPARAM};
+use bindings::Windows::Win32::System::LibraryLoader::GetModuleHandleW;
+use bindings::Windows::Win32::System::WinRT::ICompositorDesktopInterop;
+use bindings::Windows::Win32::UI::WindowsAndMessaging::{
+    CreateWindowExW, DefWindowProcW, GetClientRect, LoadCursorW, RegisterClassW, CREATESTRUCTW,
+    CW_USEDEFAULT, GWLP_USERDATA, HMENU, IDC_ARROW, WM_NCCREATE, WNDCLASSW,
     WS_EX_NOREDIRECTIONBITMAP, WS_OVERLAPPEDWINDOW, WS_VISIBLE,
 };
-use bindings::windows::win32::windows_and_messaging::DefWindowProcW;
-use bindings::windows::win32::windows_and_messaging::{
-    CreateWindowExW, RegisterClassW, HWND, LPARAM, WNDCLASSW, WPARAM,
-};
-use bindings::windows::win32::windows_and_messaging::{GetClientRect, CREATESTRUCTW};
-use bindings::windows::win32::winrt::ICompositorDesktopInterop;
+use bindings::Windows::UI::Composition::{Compositor, Desktop::DesktopWindowTarget};
 use windows::Interface;
 
 use crate::check::CheckHandle;
@@ -47,15 +41,13 @@ impl<F: FnMut(HWND, u32, WPARAM, LPARAM) -> LRESULT> Window<F> {
         let class_name = WINDOW_CLASS_NAME.to_wide();
         let title = title.to_wide();
         unsafe {
-            let instance = HINSTANCE(GetModuleHandleW(PWSTR(std::ptr::null_mut())).check_handle()?);
+            let instance = GetModuleHandleW(PWSTR(std::ptr::null_mut())).check_handle()?;
             REGISTER_WINDOW_CLASS.call_once(|| {
                 let window_class = WNDCLASSW {
-                    h_cursor: LoadCursorW(HINSTANCE(0), PWSTR(IDC_ARROW as *mut u16))
-                        .check_handle()
-                        .unwrap(),
-                    h_instance: instance,
-                    lpsz_class_name: class_name.as_pwstr(),
-                    lpfn_wnd_proc: Some(Self::wnd_proc),
+                    hCursor: LoadCursorW(HINSTANCE(0), IDC_ARROW).check_handle().unwrap(),
+                    hInstance: instance,
+                    lpszClassName: class_name.as_pwstr(),
+                    lpfnWndProc: Some(Self::wnd_proc),
                     ..Default::default()
                 };
                 let _ = RegisterClassW(&window_class).check_handle().unwrap();
@@ -67,7 +59,7 @@ impl<F: FnMut(HWND, u32, WPARAM, LPARAM) -> LRESULT> Window<F> {
             });
             let result_ptr = Box::into_raw(result);
             let _ = CreateWindowExW(
-                WS_EX_NOREDIRECTIONBITMAP as u32,
+                WS_EX_NOREDIRECTIONBITMAP,
                 class_name.as_pwstr(),
                 title.as_pwstr(),
                 WS_OVERLAPPEDWINDOW | WS_VISIBLE,
@@ -91,17 +83,12 @@ impl<F: FnMut(HWND, u32, WPARAM, LPARAM) -> LRESULT> Window<F> {
         is_topmost: bool,
     ) -> windows::Result<DesktopWindowTarget> {
         let compositor_desktop: ICompositorDesktopInterop = compositor.cast()?;
-        let mut result = None;
-        unsafe {
-            compositor_desktop
-                .CreateDesktopWindowTarget(self.handle, is_topmost, &mut result)
-                .and_some(result)
-        }
+        unsafe { compositor_desktop.CreateDesktopWindowTarget(self.handle, is_topmost) }
     }
 
     fn get_self_from_handle(window: HWND) -> Option<Box<Self>> {
         unsafe {
-            let ptr = GetWindowLongPtrW(window, GWLP_USERDATA);
+            let ptr = GetWindowLongPtrW(window, GWLP_USERDATA.0);
             if ptr != 0 {
                 Some(Box::from_raw(ptr as *mut _))
             } else {
@@ -121,10 +108,10 @@ impl<F: FnMut(HWND, u32, WPARAM, LPARAM) -> LRESULT> Window<F> {
                 let create_struct = lparam.0 as *mut CREATESTRUCTW;
                 let create_struct = create_struct.as_mut().unwrap();
                 let mut window_box: Box<Self> =
-                    Box::from_raw(create_struct.lp_create_params as *mut _);
+                    Box::from_raw(create_struct.lpCreateParams as *mut _);
                 window_box.handle = window_handle;
                 let window_ptr = Box::into_raw(window_box);
-                SetWindowLongPtrW(window_handle, GWLP_USERDATA, window_ptr as _);
+                SetWindowLongPtrW(window_handle, GWLP_USERDATA.0, window_ptr as _);
             } else if let Some(this) = Self::get_self_from_handle(window_handle) {
                 let this = Box::into_raw(this);
                 let this = this.as_mut().unwrap();
@@ -142,6 +129,9 @@ pub fn get_window_size(window_handle: HWND) -> windows::Result<SizeInt32> {
         let _ = GetClientRect(window_handle, &mut rect).ok()?;
         let width = rect.right - rect.left;
         let height = rect.bottom - rect.top;
-        Ok(SizeInt32 { width, height })
+        Ok(SizeInt32 {
+            Width: width,
+            Height: height,
+        })
     }
 }

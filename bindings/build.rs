@@ -1,33 +1,27 @@
 fn main() {
-    windows::build!(
-        windows::foundation::numerics::{Vector2, Vector3},
-        windows::foundation::TimeSpan,
-        windows::graphics::SizeInt32,
-        windows::system::DispatcherQueueController,
-        windows::ui::composition::desktop::DesktopWindowTarget,
-        windows::ui::composition::{
-            AnimationIterationBehavior, CompositionAnimation, CompositionBatchTypes,
-            CompositionBorderMode, CompositionColorBrush, CompositionContainerShape,
-            CompositionEllipseGeometry, CompositionGeometry, CompositionNineGridBrush,
-            CompositionScopedBatch, CompositionShape, CompositionShapeCollection,
-            CompositionSpriteShape, Compositor, ContainerVisual, ShapeVisual, SpriteVisual,
+    windows::build! {
+        Windows::Graphics::SizeInt32,
+        Windows::Win32::System::WinRT::{
+            CreateDispatcherQueueController, ICompositorDesktopInterop,
+        },
+        Windows::UI::Colors,
+        Windows::UI::Composition::Desktop::DesktopWindowTarget,
+        Windows::UI::Composition::{
+            CompositionColorBrush, CompositionContainerShape, CompositionEllipseGeometry,
+            CompositionNineGridBrush, CompositionScopedBatch, CompositionShapeCollection,
+            CompositionSpriteShape, Compositor, ShapeVisual, SpriteVisual,
             Vector3KeyFrameAnimation, VisualCollection,
         },
-        windows::ui::{Color, Colors},
-        windows::win32::display_devices::RECT,
-        windows::win32::system_services::{
-            CreateDispatcherQueueController, BOOL, PWSTR, WM_MOUSEMOVE, WM_SIZE, WM_SIZING,
-            GetModuleHandleW, CW_USEDEFAULT, HINSTANCE, IDC_ARROW, LRESULT, WM_LBUTTONDOWN,
-            WM_DESTROY, WS_OVERLAPPEDWINDOW, WS_VISIBLE, WS_EX_NOREDIRECTIONBITMAP, E_HANDLE,
-            WM_RBUTTONDOWN, WM_NCCREATE, GWLP_USERDATA, E_FAIL,
+        Windows::Win32::Foundation::{
+            RECT, BOOL, HINSTANCE, LRESULT, E_FAIL, E_HANDLE, HWND, WPARAM,
         },
-        windows::win32::windows_and_messaging::HWND,
-        windows::win32::winrt::ICompositorDesktopInterop,
-        windows::win32::menus_and_resources::{LoadCursorW, HMENU, WNDPROC, HCURSOR},
-        windows::win32::windows_and_messaging::{
-            CreateWindowExW, DefWindowProcW, DispatchMessageW, GetMessageW, PostQuitMessage,
-            RegisterClassW, HWND, LPARAM, MSG, WNDCLASSW, WPARAM, TranslateMessage, CREATESTRUCTW,
-            GetClientRect,
+        Windows::Win32::UI::WindowsAndMessaging::{
+            WM_MOUSEMOVE, WM_SIZE, WM_SIZING, CW_USEDEFAULT, IDC_ARROW, WM_LBUTTONDOWN,
+            WM_DESTROY, WINDOW_STYLE, WINDOW_EX_STYLE, WM_RBUTTONDOWN, WM_NCCREATE, WINDOW_LONG_PTR_INDEX,
+            LoadCursorW, HMENU, WNDPROC, HCURSOR, CreateWindowExW, DefWindowProcW, DispatchMessageW,
+            GetMessageW, PostQuitMessage, RegisterClassW, MSG, WNDCLASSW, TranslateMessage,
+            CREATESTRUCTW, GetClientRect,
         },
-    );
+        Windows::Win32::System::LibraryLoader::GetModuleHandleW,
+    };
 }

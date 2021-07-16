@@ -12,18 +12,16 @@ use dispatcher_queue::create_dispatcher_queue_controller_for_current_thread;
 use minesweeper::Minesweeper;
 use window::{get_window_size, Window};
 
-use bindings::windows::{
-    foundation::numerics::Vector2,
-    ui::composition::Compositor,
-    win32::{
-        system_services::{
-            LRESULT, WM_DESTROY, WM_LBUTTONDOWN, WM_MOUSEMOVE, WM_RBUTTONDOWN, WM_SIZE, WM_SIZING,
-        },
-        windows_and_messaging::{
-            DefWindowProcW, DispatchMessageW, GetMessageW, PostQuitMessage, TranslateMessage, HWND,
-            LPARAM, MSG,
+use bindings::Windows::{
+    Foundation::Numerics::Vector2,
+    Win32::{
+        Foundation::{HWND, LPARAM, LRESULT},
+        UI::WindowsAndMessaging::{
+            DefWindowProcW, DispatchMessageW, GetMessageW, PostQuitMessage, TranslateMessage, MSG,
+            WM_DESTROY, WM_LBUTTONDOWN, WM_MOUSEMOVE, WM_RBUTTONDOWN, WM_SIZE, WM_SIZING,
         },
     },
+    UI::Composition::Compositor,
 };
 
 fn run() -> windows::Result<()> {
@@ -34,18 +32,18 @@ fn run() -> windows::Result<()> {
     let window_height = 600;
 
     let compositor = Compositor::new()?;
-    let root = compositor.create_container_visual()?;
-    root.set_relative_size_adjustment(Vector2 { x: 1.0, y: 1.0 })?;
+    let root = compositor.CreateContainerVisual()?;
+    root.SetRelativeSizeAdjustment(Vector2::new(1.0, 1.0))?;
 
     let window_size = Vector2 {
-        x: window_width as f32,
-        y: window_height as f32,
+        X: window_width as f32,
+        Y: window_height as f32,
     };
     let mut game = Minesweeper::new(&root, &window_size)?;
 
     let message_handler = move |window_handle, message, wparam, lparam| -> LRESULT {
         unsafe {
-            match message as i32 {
+            match message {
                 WM_DESTROY => {
                     PostQuitMessage(0);
                     return LRESULT(0);
@@ -53,16 +51,16 @@ fn run() -> windows::Result<()> {
                 WM_MOUSEMOVE => {
                     let (x, y) = get_mouse_position(lparam);
                     let point = Vector2 {
-                        x: x as f32,
-                        y: y as f32,
+                        X: x as f32,
+                        Y: y as f32,
                     };
                     game.on_pointer_moved(&point).unwrap();
                 }
                 WM_SIZE | WM_SIZING => {
                     let new_size = get_window_size(window_handle).unwrap();
                     let new_size = Vector2 {
-                        x: new_size.width as f32,
-                        y: new_size.height as f32,
+                        X: new_size.Width as f32,
+                        Y: new_size.Height as f32,
                     };
                     game.on_parent_size_changed(&new_size).unwrap();
                 }
@@ -81,7 +79,7 @@ fn run() -> windows::Result<()> {
     let window = Window::new("Minesweeper", window_width, window_height, message_handler)?;
 
     let target = window.create_window_target(&compositor, false)?;
-    target.set_root(&root)?;
+    target.SetRoot(&root)?;
 
     let mut message = MSG::default();
     unsafe {
@@ -91,7 +89,7 @@ fn run() -> windows::Result<()> {
         }
     }
 
-    windows::ErrorCode::from_win32(message.w_param.0 as u32).ok()
+    windows::HRESULT::from_win32(message.wParam.0 as u32).ok()
 }
 
 fn main() {
